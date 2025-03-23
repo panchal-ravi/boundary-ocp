@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: boundary-worker
+  name: boundary-worker
+spec:
+  selector:
+    matchLabels:
+      app: boundary-worker
+  template:
+    metadata:
+      labels:
+        app: boundary-worker
+    spec:
+      containers:
+      - image: hashicorp/boundary-enterprise:0.19-ent
+        imagePullPolicy: Always
+        name: boundary-worker
+        command: ["/bin/sh", "-c", "boundary server -config /etc/boundary/config/boundary-worker.hcl"]
+        volumeMounts:
+        - name: boundary-worker-config
+          mountPath: /etc/boundary/config
+        - name: worker-auth-storage
+          mountPath: /etc/boundary/auth-storage
+        ports:
+        - containerPort: 9202
+          protocol: TCP
+          name: proxy
+      restartPolicy: Always
+      volumes:
+      - name: boundary-worker-config
+        configMap:
+          name: boundary-worker-config
+      - name: worker-auth-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: boundary-worker
+  name: boundary-worker
+spec:
+  ports:
+  - name: proxy
+    port: 9202
+    targetPort: proxy
+    protocol: TCP
+  selector:
+    app: boundary-worker
+#  type: NodePort
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: boundary-worker
+  labels:
+    app: boundary-worker
+spec:
+  host: worker.apps.67d8e930b37c7c37dc8c641d.ocp.techzone.ibm.com
+  port:
+    targetPort: proxy
+  tls:
+    termination: passthrough
+  to:
+    kind: Service
+    name: boundary-worker
+    weight: 100
+  wildcardPolicy: None

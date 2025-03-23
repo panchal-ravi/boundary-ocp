@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: boundary-controller
+  name: boundary-controller
+spec:
+  selector:
+    matchLabels:
+      app: boundary-controller
+  template:
+    metadata:
+      labels:
+        app: boundary-controller
+    spec:
+      containers:
+      - image: hashicorp/boundary-enterprise:0.19-ent
+        imagePullPolicy: Always
+        name: boundary-controller
+        command: ["/bin/sh", "-c", "boundary database init -skip-host-resources-creation -skip-target-creation -config /etc/boundary/config/boundary-controller.hcl && boundary server -config /etc/boundary/config/boundary-controller.hcl"]
+        env:
+        - name: POSTGRESQL_CONNECTION_STRING
+          value: postgres://boundary:boundary@postgres.boundary.svc.cluster.local:5432/boundary
+        volumeMounts:
+        - name: boundary-controller-config
+          mountPath: /etc/boundary/config
+        - name: boundary-license
+          mountPath: /etc/boundary/license
+        ports:
+        - containerPort: 9200
+          protocol: TCP
+          name: api
+        - containerPort: 9201
+          protocol: TCP
+          name: cluster
+        - containerPort: 9203
+          protocol: TCP
+          name: ops
+      restartPolicy: Always
+      volumes:
+      - name: boundary-controller-config
+        configMap:
+          name: boundary-controller-config
+      - name: boundary-license
+        configMap:
+          name: boundary-license
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: boundary-controller
+  name: boundary-controller
+spec:
+  ports:
+  - name: api
+    port: 9200
+    targetPort: api
+    protocol: TCP
+  - name: cluster
+    port: 9201
+    targetPort: cluster
+    protocol: TCP
+  - name: ops
+    port: 9203
+    targetPort: ops
+    protocol: TCP
+  selector:
+    app: boundary-controller
+#  type: NodePort
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: boundary-api
+  labels:
+    app: boundary-controller
+spec:
+  host: boundary.apps.67d8e930b37c7c37dc8c641d.ocp.techzone.ibm.com
+  port:
+    targetPort: api
+  tls:
+    termination: edge
+  to:
+    kind: Service
+    name: boundary-controller
+    weight: 100
+  wildcardPolicy: None
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: boundary-cluster
+  labels:
+    app: boundary-controller
+spec:
+  host: boundary-cluster.apps.67d8e930b37c7c37dc8c641d.ocp.techzone.ibm.com
+  port:
+    targetPort: cluster
+  tls:
+    termination: passthrough
+  to:
+    kind: Service
+    name: boundary-controller
+    weight: 100
+  wildcardPolicy: None
