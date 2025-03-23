@@ -22,8 +22,9 @@ kubectl delete pod alpine
 ```
 
 ## Get the domain name
+```
 oc get routes -n openshift-authentication oauth-openshift -ojson | jq .spec.host -r | cut -d '.' -f 2-
-
+```
 
 Update "public_cluster_address" field in boundary-controller.hcl using the domain name from above output
 create configmap for boundary-controller 
