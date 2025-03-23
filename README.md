@@ -26,8 +26,8 @@ kubectl delete pod alpine
 oc get routes -n openshift-authentication oauth-openshift -ojson | jq .spec.host -r | cut -d '.' -f 2-
 ```
 
-Update "public_cluster_address" field in boundary-controller.hcl using the domain name from above output
-create configmap for boundary-controller 
+Update `public_cluster_address` field in `boundary-controller.hcl` using the domain name from above output
+## create configmap for boundary-controller 
 ```
 k create cm boundary-controller-config --from-file=./boundary-controller.hcl
 ```
@@ -37,13 +37,13 @@ k create cm boundary-controller-config --from-file=./boundary-controller.hcl
 k create cm boundary-license --from-file=./license.hclic
 ```
 
-Review POSTGRESQL_CONNECTION_STRING in the boundary-controller.yaml
+Review `POSTGRESQL_CONNECTION_STRING` in the `boundary-controller.yaml` file
 ## Deploy boundary controller
 ```
 k apply -f ./boundary-controller.yaml
 ```
 Check boundary-controller logs for any errors.
-Update "public_addr" in boundary-worker.hcl
+Update `public_addr` in `boundary-worker.hcl` file
 ```
 oc get routes boundary-controller -ojson | jq .spec.host -r
 ```
