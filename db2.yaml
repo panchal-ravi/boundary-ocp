@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db2-secret
+type: Opaque
+data:
+  db2inst1-pwd: ZGIyaW5zdDEtcHdk  # Base64 encoded password
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: db2-pvc
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db2
+  labels:
+    app: db2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db2
+  template:
+    metadata:
+      labels:
+        app: db2
+    spec:
+      containers:
+      - name: db2
+        # image: icr.io/db2_community/db2
+        image: ibmcom/db2
+        env:
+        - name: LICENSE
+          value: "accept"
+        - name: TO_CREATE_SAMPLEDB
+          value: "true"
+        - name: DB2INST1_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db2-secret
+              key: db2inst1-pwd
+        - name: DBNAME
+          value: testdb
+        ports:
+        - containerPort: 50000
+        volumeMounts:
+        - name: db2-storage
+          mountPath: /database
+        securityContext:
+          capabilities:
+          privileged: true
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: true
+      volumes:
+      - name: db2-storage
+        emptyDir: {}
+      # - name: db2-storage
+      #   persistentVolumeClaim:
+      #     claimName: db2-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db2
+spec:
+  selector:
+    app: db2
+  ports:
+  - port: 50000
+    targetPort: 50000
+  type: ClusterIP

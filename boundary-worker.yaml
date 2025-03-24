@@ -58,7 +58,7 @@ metadata:
   labels:
     app: boundary-worker
 spec:
-  host: worker.apps.67d8e930b37c7c37dc8c641d.ocp.techzone.ibm.com
+  host: worker.apps.67e0a8e5a503e6e92a9ea91b.ocp.techzone.ibm.com
   port:
     targetPort: proxy
   tls:

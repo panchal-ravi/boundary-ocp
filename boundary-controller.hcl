@@ -20,7 +20,7 @@ listener "tcp"{
 controller {
   name = "boundary-controller"
   description = "Boundary controller"
-  public_cluster_addr = "boundary-cluster.apps.p1239.cecc.ihost.com:443"
+  public_cluster_addr = "boundary-cluster.apps.67e0a8e5a503e6e92a9ea91b.ocp.techzone.ibm.com:443"
   license = "file:////etc/boundary/license/license.hclic"
   graceful_shutdown_wait_duration = "10s"
   database {
