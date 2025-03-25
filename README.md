@@ -153,8 +153,10 @@ EOF
 )
 
 boundary credential-libraries create vault-generic -credential-store-id=$VAULT_CRED_STORE_ID -vault-path="kubernetes/creds/my-role" -vault-http-method="POST" -vault-http-request-body=$REQUEST_BODY
+```
 
-# Create OCP target
+## Create boundary target for OCP
+```sh
 export OCP_ADDR=$(k config view --minify -o json | jq '.clusters[0].cluster.server' -r | cut -d/ -f3)
 export OCP_PORT=$(k config view --minify -o json | jq '.clusters[0].name'  -r | cut -d':' -f2)
 export OCP_TARGET_ID=$(boundary targets create tcp -name=ocp_readonly -address=$OCP_ADDR -default-port=$OCP_PORT -scope-id=$PROJECT_ID -format=json | jq .item.id -r)
