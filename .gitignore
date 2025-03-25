@@ -1,2 +1,6 @@
 kubeconfig
 license.hclic
+create-kubeconfig.sh
+create-sa.yaml
+ravi-kubeconfig.yaml
+test*

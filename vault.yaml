@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vault
+  name: vault
+spec:
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      containers:
+      - image: hashicorp/vault
+        imagePullPolicy: Always
+        name: vault
+        # command: ["/bin/sh", "-c", "boundary server -config /etc/boundary/config/vault.hcl"]
+        ports:
+        - containerPort: 8200
+          protocol: TCP
+          name: api
+        env:
+        - name: VAULT_DEV_ROOT_TOKEN_ID
+          value: "root"
+        securityContext:
+          capabilities:
+            add: ["CAP_SETFCAP"]
+          # privileged: true
+          # readOnlyRootFilesystem: false
+          # allowPrivilegeEscalation: true
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vault
+  name: vault
+spec:
+  ports:
+  - name: api
+    port: 8200
+    targetPort: api
+    protocol: TCP
+  selector:
+    app: vault
+#  type: NodePort
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: vault
+  labels:
+    app: vault
+spec:
+  host: vault.apps.67e0a8e5a503e6e92a9ea91b.ocp.techzone.ibm.com
+  port:
+    targetPort: api
+  tls:
+    termination: edge
+  to:
+    kind: Service
+    name: vault
+    weight: 100
+  wildcardPolicy: None
